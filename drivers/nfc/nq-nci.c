@@ -153,15 +153,15 @@ static irqreturn_t nqx_dev_irq_handler(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
-static int is_data_available_for_read(struct nqx_dev *nqx_dev)
-{
-	int ret;
-
-	nqx_enable_irq(nqx_dev);
-	ret = wait_event_interruptible_timeout(nqx_dev->read_wq,
-		!nqx_dev->irq_enabled, msecs_to_jiffies(MAX_IRQ_WAIT_TIME));
-	return ret;
-}
+//static int is_data_available_for_read(struct nqx_dev *nqx_dev)
+//{
+//	int ret;
+//
+//	nqx_enable_irq(nqx_dev);
+//	ret = wait_event_interruptible_timeout(nqx_dev->read_wq,
+//		!nqx_dev->irq_enabled, msecs_to_jiffies(MAX_IRQ_WAIT_TIME));
+//	return ret;
+//}
 
 static ssize_t nfc_read(struct file *filp, char __user *buf,
 					size_t count, loff_t *offset)
@@ -811,115 +811,115 @@ static const struct file_operations nfc_dev_fops = {
  * Return:      error codes in case of any failure,
  *              number of bytes read otherwise
  */
-static int get_nfcc_hw_info(struct i2c_client *client,
-		struct nqx_dev *nqx_dev, char nci_reset_rsp_payload_len)
-{
-	int ret = 0;
-
-	char *nci_init_cmd = NULL;
-	char *nci_init_rsp = NULL;
-	char *nci_reset_ntf = NULL;
-	char *nfcc_hw_info = NULL;
-	unsigned char nfcc_hw_info_len = 0;
-
-	nci_init_cmd = kzalloc(NCI_INIT_CMD_LEN + 1, GFP_DMA | GFP_KERNEL);
-	if (!nci_init_cmd) {
-		ret = -ENOMEM;
-		goto err_nfcc_hw_info;
-	}
-
-	nci_init_rsp = kzalloc(NCI_INIT_RSP_LEN + 1,  GFP_DMA | GFP_KERNEL);
-	if (!nci_init_rsp) {
-		ret = -ENOMEM;
-		goto err_nfcc_hw_info;
-	}
-
-	nci_reset_ntf = kzalloc(NCI_RESET_NTF_LEN + 1,  GFP_DMA | GFP_KERNEL);
-	if (!nci_reset_ntf) {
-		ret = -ENOMEM;
-		goto err_nfcc_hw_info;
-	}
-
-	if (nci_reset_rsp_payload_len == NCI_1_0_RESET_RSP_PAYLOAD_LEN) {
-		/*
-		 * Chipset is NQ330 or older.
-		 * Send core INIT command to get HW info.
-		 */
-		nci_init_cmd[0] = 0x20;
-		nci_init_cmd[1] = 0x01;
-		nci_init_cmd[2] = 0x00;
-		ret = nqx_standby_write(nqx_dev, nci_init_cmd,
-					NCI_INIT_CMD_LEN);
-		if (ret < 0) {
-			dev_err(&client->dev,
-			"%s: - i2c_master_send failed for Core INIT\n",
-					__func__);
-			goto err_nfcc_hw_info;
-		}
-
-		ret = is_data_available_for_read(nqx_dev);
-		if (ret <= 0) {
-			nqx_disable_irq(nqx_dev);
-			goto err_nfcc_hw_info;
-		}
-
-		/* Read Response of INIT command */
-		ret = i2c_master_recv(client, nci_init_rsp, NCI_INIT_RSP_LEN);
-		if (ret < 0) {
-			dev_err(&client->dev,
-			"%s: - i2c_master_recv get INIT rsp Error\n",
-					__func__);
-			goto err_nfcc_hw_info;
-		}
-		nfcc_hw_info = nci_init_rsp;
-	} else {
-		/*
-		 * Chipset is NQ4xx or later.
-		 * Retrieve NTF data from wait queue.
-		 */
-		ret = is_data_available_for_read(nqx_dev);
-		if (ret <= 0) {
-			nqx_disable_irq(nqx_dev);
-			goto err_nfcc_hw_info;
-		}
-
-		/* Read Notification of RESET command */
-		ret = i2c_master_recv(client, nci_reset_ntf, NCI_RESET_NTF_LEN);
-		if (ret < 0) {
-			dev_err(&client->dev,
-			"%s: - i2c_master_recv get RESET ntf Error\n",
-					__func__);
-			goto err_nfcc_hw_info;
-		}
-		nfcc_hw_info = nci_reset_ntf;
-	}
-
-	/* Save NFCC HW info */
-	nfcc_hw_info_len =
-		NCI_HEADER_LEN + nfcc_hw_info[NCI_PAYLOAD_LENGTH_INDEX];
-	if (nfcc_hw_info_len > PAYLOAD_HEADER_LENGTH) {
-		nqx_dev->nqx_info.info.chip_type =
-			nfcc_hw_info[nfcc_hw_info_len -
-					NFCC_HW_CHIP_ID_OFFSET];
-		nqx_dev->nqx_info.info.rom_version =
-			nfcc_hw_info[nfcc_hw_info_len -
-					NFCC_HW_ROM_VER_OFFSET];
-		nqx_dev->nqx_info.info.fw_major =
-			nfcc_hw_info[nfcc_hw_info_len -
-					NFCC_HW_MAJOR_NO_OFFSET];
-		nqx_dev->nqx_info.info.fw_minor =
-			nfcc_hw_info[nfcc_hw_info_len -
-					NFCC_HW_MINOR_NO_OFFSET];
-	}
-
-err_nfcc_hw_info:
-
-	kfree(nci_reset_ntf);
-	kfree(nci_init_rsp);
-	kfree(nci_init_cmd);
-
-	return ret;
-}
+//static int get_nfcc_hw_info(struct i2c_client *client,
+//		struct nqx_dev *nqx_dev, char nci_reset_rsp_payload_len)
+//{
+//	int ret = 0;
+//
+//	char *nci_init_cmd = NULL;
+//	char *nci_init_rsp = NULL;
+//	char *nci_reset_ntf = NULL;
+//	char *nfcc_hw_info = NULL;
+//	unsigned char nfcc_hw_info_len = 0;
+//
+//	nci_init_cmd = kzalloc(NCI_INIT_CMD_LEN + 1, GFP_DMA | GFP_KERNEL);
+//	if (!nci_init_cmd) {
+//		ret = -ENOMEM;
+//		goto err_nfcc_hw_info;
+//	}
+//
+//	nci_init_rsp = kzalloc(NCI_INIT_RSP_LEN + 1,  GFP_DMA | GFP_KERNEL);
+//	if (!nci_init_rsp) {
+//		ret = -ENOMEM;
+//		goto err_nfcc_hw_info;
+//	}
+//
+//	nci_reset_ntf = kzalloc(NCI_RESET_NTF_LEN + 1,  GFP_DMA | GFP_KERNEL);
+//	if (!nci_reset_ntf) {
+//		ret = -ENOMEM;
+//		goto err_nfcc_hw_info;
+//	}
+//
+//	if (nci_reset_rsp_payload_len == NCI_1_0_RESET_RSP_PAYLOAD_LEN) {
+//		/*
+//		 * Chipset is NQ330 or older.
+//		 * Send core INIT command to get HW info.
+//		 */
+//		nci_init_cmd[0] = 0x20;
+//		nci_init_cmd[1] = 0x01;
+//		nci_init_cmd[2] = 0x00;
+//		ret = nqx_standby_write(nqx_dev, nci_init_cmd,
+//					NCI_INIT_CMD_LEN);
+//		if (ret < 0) {
+//			dev_err(&client->dev,
+//			"%s: - i2c_master_send failed for Core INIT\n",
+//					__func__);
+//			goto err_nfcc_hw_info;
+//		}
+//
+//		ret = is_data_available_for_read(nqx_dev);
+//		if (ret <= 0) {
+//			nqx_disable_irq(nqx_dev);
+//			goto err_nfcc_hw_info;
+//		}
+//
+//		/* Read Response of INIT command */
+//		ret = i2c_master_recv(client, nci_init_rsp, NCI_INIT_RSP_LEN);
+//		if (ret < 0) {
+//			dev_err(&client->dev,
+//			"%s: - i2c_master_recv get INIT rsp Error\n",
+//					__func__);
+//			goto err_nfcc_hw_info;
+//		}
+//		nfcc_hw_info = nci_init_rsp;
+//	} else {
+//		/*
+//		 * Chipset is NQ4xx or later.
+//		 * Retrieve NTF data from wait queue.
+//		 */
+//		ret = is_data_available_for_read(nqx_dev);
+//		if (ret <= 0) {
+//			nqx_disable_irq(nqx_dev);
+//			goto err_nfcc_hw_info;
+//		}
+//
+//		/* Read Notification of RESET command */
+//		ret = i2c_master_recv(client, nci_reset_ntf, NCI_RESET_NTF_LEN);
+//		if (ret < 0) {
+//			dev_err(&client->dev,
+//			"%s: - i2c_master_recv get RESET ntf Error\n",
+//					__func__);
+//			goto err_nfcc_hw_info;
+//		}
+//		nfcc_hw_info = nci_reset_ntf;
+//	}
+//
+//	/* Save NFCC HW info */
+//	nfcc_hw_info_len =
+//		NCI_HEADER_LEN + nfcc_hw_info[NCI_PAYLOAD_LENGTH_INDEX];
+//	if (nfcc_hw_info_len > PAYLOAD_HEADER_LENGTH) {
+//		nqx_dev->nqx_info.info.chip_type =
+//			nfcc_hw_info[nfcc_hw_info_len -
+//					NFCC_HW_CHIP_ID_OFFSET];
+//		nqx_dev->nqx_info.info.rom_version =
+//			nfcc_hw_info[nfcc_hw_info_len -
+//					NFCC_HW_ROM_VER_OFFSET];
+//		nqx_dev->nqx_info.info.fw_major =
+//			nfcc_hw_info[nfcc_hw_info_len -
+//					NFCC_HW_MAJOR_NO_OFFSET];
+//		nqx_dev->nqx_info.info.fw_minor =
+//			nfcc_hw_info[nfcc_hw_info_len -
+//					NFCC_HW_MINOR_NO_OFFSET];
+//	}
+//
+//err_nfcc_hw_info:
+//
+//	kfree(nci_reset_ntf);
+//	kfree(nci_init_rsp);
+//	kfree(nci_init_cmd);
+//
+//	return ret;
+//}
 
 /**
  * Do not need check availability of NFCC.
