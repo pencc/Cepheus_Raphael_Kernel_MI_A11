@@ -10,4 +10,7 @@ export KERNEL_DEFCONFIG=cepheus_user_defconfig
 #set BUILD_CONFIG=build.config.gki.aarch64
 
 make O=$OUT REAL_CC=/home/linx/Project/srcCode/gauguin-r-oss/toolchains/llvm-Snapdragon_LLVM_for_Android_8.0/prebuilt/linux-x86_64/bin/clang CLANG_TRIPLE=aarch64-linux-gnu- cepheus_user_defconfig
+cp kernel.release out/include/config/kernel.release
+cp compile.h out/include/generated/compile.h
 make -j$(nproc) O=$OUT REAL_CC=/home/linx/Project/srcCode/gauguin-r-oss/toolchains/llvm-Snapdragon_LLVM_for_Android_8.0/prebuilt/linux-x86_64/bin/clang CLANG_TRIPLE=aarch64-linux-gnu- 
+#make -j$(nproc) O=$OUT REAL_CC=/home/linx/Project/srcCode/gauguin-r-oss/toolchains/llvm-Snapdragon_LLVM_for_Android_8.0/prebuilt/linux-x86_64/bin/clang CLANG_TRIPLE=aarch64-linux-gnu- modules 
